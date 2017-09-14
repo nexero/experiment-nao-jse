@@ -1,0 +1,370 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>KOOPERATIONSSTUDIE</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script type="text/javascript" src="http://cdn.robotwebtools.org/EventEmitter2/current/eventemitter2.js"></script>
+        <script type="text/javascript" src="http://cdn.robotwebtools.org/roslibjs/current/roslib.js"></script>
+        <script src="../jspsych.js"></script>
+        <script src="../plugins/jspsych-text.js"></script>
+        <script src="../plugins/jspsych-single-stim.js"></script>
+        <script src="../plugins/jspsych-timer.js"></script>
+        <script src="../plugins/jspsych-naoqi-interface.js"></script>
+        <script src="../plugins/jspsych-citk-single-stim.js"></script>
+        <script src="../plugins/jspsych-survey-text.js"></script>
+        <script src="../plugins/jspsych-survey-likert.js"></script>
+        <script src="../plugins/jspsych-button-response.js"></script>
+        <link href="../css/jspsych.css" rel="stylesheet" type="text/css"></link>
+    </head>
+    <body>
+    </body>
+    
+    <script>
+    
+    // ************************
+    // ******* FUNCTIONS ******
+    // ************************
+    
+    function getSubjectData() {
+
+          var trials = jsPsych.data.getAllData().values();
+          var sum_rt = 0;
+          var correct_trial_count = 0;
+          var correct_rt_count = 0;
+          var len = 0;
+          for (var i = 0; i < trials.length; i++) {
+            if (trials[i].trial_type === "citk-single-stim") {
+                if (trials[i].correct == true) {
+                    correct_trial_count++;
+                    if(trials[i].rt > -1){
+                        sum_rt += trials[i].rt;
+                        correct_rt_count++;
+                    }
+                }
+                len++;
+            }
+            if (trials[i].trial_type === "single-stim") {
+                if (trials[i].correct == true) {
+                    correct_trial_count++;
+                    if(trials[i].rt > -1){
+                        sum_rt += trials[i].rt;
+                        correct_rt_count++;
+                    }
+                }
+                len++;
+            }
+          }
+          return {
+            rt: Math.floor(sum_rt / correct_rt_count),
+            accuracy: Math.floor(correct_trial_count / len * 100)
+          }
+    }
+    
+    var citk_parameters = {
+        service_url: "129.70.149.244",
+        service_port: "5000"
+    }
+    
+    // ************************
+    // ******* PARAMETERS *****
+    // ************************
+
+    var configuration_ip_de = {
+      type: 'survey-text',
+      questions: ["IP (default: "+citk_parameters.service_url+")", "Port (default: "+citk_parameters.service_port+")"],
+      preamble: "Bitte geben Sie hier die IP und den Port Ihres Servers ein.",
+      on_finish: function(data){
+            parsed_ip = JSON.parse(data.responses).Q0
+            parsed_port = JSON.parse(data.responses).Q1
+            var ip = (parsed_ip == "") ? citk_parameters.service_url : parsed_ip
+            var port = (parsed_port == "") ? citk_parameters.service_port : parsed_port
+            
+            citk_parameters.service_url = ip
+            citk_parameters.service_port = port
+            
+            jsPsych.plugins['naoqi-interface'].preload(citk_parameters);
+        }
+    };
+           
+    //jsPsych.plugins['citk'].goToSavePos();
+
+    // ************************
+    // ******* BLOCK 1: WELCOME ******
+    // ************************
+
+    function guidGenerator() {
+        var S4 = function() {
+           return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+        };
+        return (S4()+"-"+S4());
+    }
+    
+    var id = guidGenerator();
+
+    var welcome_block_en = {
+      type: "text",
+      text: "<p>Thank you for participating in this experiment! Please read the following instructions carefully.</p> "+
+        "<p>In this experiment you and the robot will jointly solve a simple reaction time task.<br/>" +
+        "The experiment consists of four parts which are interrupted by short breaks. Each part will take approximately 8 minutes. </p>" +  
+        "Please press the space bar for further information.",
+      choices: ['space'],
+      on_finish: function(data){
+            var participant_id = id;
+            jsPsych.data.addDataToLastTrial({participant_id});
+        }
+    };
+    
+    var welcome_block_de = {
+      type: "text",
+      text: "<p>Vielen Dank das Sie an diesem Experiment teilnehmen! Bitte lesen Sie sich die folgenden Anweisungen aufmerksam durch.</p> "+
+        "<p>In diesem Experiment werden Sie und der Roboter gemeinsam eine einfache Reaktionszeit-Aufgabe lösen.<br/>" +
+        "Das Experiment besteht aus vier Teilen welche jeweils von kurzen Pausen getrennt sind. Jeder Teil dauert ungefähr 8 Minuten. </p>" +  
+        "Bitte drücken Sie die Leertaste für weitere Informationen.",
+      choices: ['space'],
+      on_finish: function(data){
+            var participant_id = id;
+            jsPsych.data.addDataToLastTrial({participant_id});
+        }
+    };
+    
+    // ************************
+    // ******* BLOCK 2: INSTRUCTIONS ******
+    // ************************
+    
+    var instructions_block_en = {
+      type: "text",
+      text: "<p>At the beginning of each trial, a black dot in the center of the screen will appear. After that, either a black square or black diamond will appear on the left or right " +
+          "of the screen. You should only react, if a square appears. The robot should only react, if a diamond appears. You react by pressing the space bar on your keyboard. </p>" +
+          "<p>If a <strong>square</strong> appears on the screen, <b>you</b> should " +
+          "press the space bar on the keyboard with your index finger as fast as you can, independent of whether the square appeared on the left or right of the screen. </p>" +
+          "<p>If a <strong>diamond</strong> appears on the screen, the robot should press the space bar on the keyboard, independent of whether the diamond appeared on the left or right of the screen.</p>" +
+          "<div class='left center-content'><img src='imgs/square.jpg'></img>" +
+          "<p class='small'><strong>Square: You should press the space bar.</strong></p></div>" +
+          "<div class='right center-content'><img src='imgs/diamond.jpg'></img>" +
+          "<p class='small'><strong>Diamond: The robot should press the space bar.</strong></p></div>" +
+          "<p>Press the space bar to begin.</p>",
+      timing_post_trial: 0
+    };
+    
+    var instructions_block_de = {
+      type: "text",
+      text: "<p>Zu Beginn eines jeden Versuchs wird ein schwarzer Punkt in der Mitte des Bildschirms angezeigt. Daraufhin wird entweder ein schwarzes Viereck oder eine schwarze Raute auf dem Bildschirm rechts oder links davon erscheinen. Sie sollen nur reagieren, wenn das Viereck erscheint. Der Roboter soll nur reagieren, wenn die Raute erscheint. Sie reagieren, indem Sie die Leertaste drücken. </p>" +
+          "<p>Wenn ein <strong>Viereck</strong> auf dem Bildschirm erscheint, sollen <b>Sie</b> die Leertaste auf der Tastatur mit dem Zeigefinger der linken Hand drücken, unabhängig davon ob das Viereck links oder rechts erscheint.</p>" +
+          "<p>Wenn eine <strong>Raute</strong> auf dem Bildschirm erscheint, soll der <b>Roboter</b> die Leertaste auf der Tastatur drücken, unabhängig davon ob die Raute links oder rechts erscheint.</p>" +
+          "<div class='left center-content'><img src='imgs/square.jpg'></img>" +
+          "<p class='small'><strong>Viereck: Sie sollen die Leertaste drücken.</strong></p></div>" +
+          "<div class='right center-content'><img src='imgs/diamond.jpg'></img>" +
+          "<p class='small'><strong>Raute: Der Roboter soll die Leertaste drücken.</strong></p></div>" +
+          "<p>Drücken Sie die Leertaste, um zu beginnen.</p>",
+      timing_post_trial: 0,
+      choices: ['space']
+    };
+        
+    var timer_trial = {
+        type: 'timer',
+        seconds:1
+    }
+    
+    // ************************
+    // ******* BLOCK 3: STIMULI 4x128=512 ******
+    // ************************
+    
+    var test_stimuli = [
+    {
+      stimulus: "imgs/square.jpg",
+      offset_y: '0px',
+      data: { response: 'go' }
+    },
+    {
+      stimulus: "imgs/diamond.jpg",
+      offset_y: '0px',
+      data: { response: 'no-go' }
+    }
+    ];
+        
+    var placements = ['left','right'];
+    var num_trials = 256; // *2 = total amount of trials
+    var num_blocks = 4;
+    
+    var post_trial_gap = function() {
+        return Math.floor( Math.random() * 1500 ) + 750;
+    };    
+    
+    var stim_blocks = []
+    
+    for (i = 0; i < num_blocks; i++) {
+        var all_trials = jsPsych.randomization.repeat(test_stimuli, num_trials/num_blocks);
+        var all_placements = jsPsych.randomization.repeat(placements, num_trials/num_blocks);
+        
+        for (i = 0; i < all_trials.length; i++) { 
+            all_trials[i].offset_y = all_placements[i];
+        }
+        
+        var block = {
+            type: "citk-single-stim",
+            stim_pre: "imgs/dot.jpg",
+            stim_correct: "imgs/dot_green.jpg",
+            stim_incorrect: "imgs/dot_red.jpg",
+            choices: ['space'],
+            timing_fixation: 250,
+            timing_stim: 250,
+            timing_response: 1800,
+            timing_result: 300,
+            timing_post_trial: 1850,
+            robot_err: 0.016, // the robot will fail in 1,6% of trials and press the button at the wrong time.
+            on_finish: function(data){
+                var correct = false;
+                if(data.response == 'go' && data.rt > -1){
+                    correct = true;
+                } else if(data.response == 'no-go' && data.rt == -251){ //250ms = black dot appearance
+                    correct = true;
+                }
+                jsPsych.data.addDataToLastTrial({correct: correct});
+                //jsPsych.data.addDataToLastTrial({participant_id});
+            },
+            timeline: all_trials
+        };
+        
+        var block_ss = {
+            type: "single-stim",
+            //stim_pre: "imgs/dot.jpg",
+            //stim_correct: "imgs/dot_green.jpg",
+            //stim_incorrect: "imgs/dot_red.jpg",
+            choices: ['space'],
+            timing_stim: 250,
+            timing_response: 1800,
+            timing_post_trial: 0,
+            on_finish: function(data){
+                var correct = false;
+                if(data.response == 'go'){
+                    correct = true;
+                } else if(data.response == 'no-go'){
+                    correct = true;
+                }
+                jsPsych.data.addDataToLastTrial({correct: correct});
+                //jsPsych.data.addDataToLastTrial({participant_id});
+            },
+            timeline: all_trials
+        };
+        
+        stim_blocks.push(block)
+    }
+    
+    // ************************
+    // ******* BLOCK 4+: DEBRIEF ******
+    // ************************
+    
+
+    var debrief_block_en = {
+      type: "text",
+      text: function() {
+        var subject_data = getSubjectData();
+        return "<p>You responded correctly on "+subject_data.accuracy+"% of "+
+        "the trials.</p><p>Your average response time was <strong>" +
+        subject_data.rt + "ms</strong>.</p>"+
+        "<p> Please write down your participant ID <br><b>"+id+"</b><br> with the paper and pen on the desk in front of you. "+
+        "<br>The examiner will ask you into another room for the completion of a questionnaire into another room.<br>"+
+        "Press any key to end the experiment. Thank you!</p>";
+      }
+    }
+    
+    var debrief_block_de = {
+      type: "text",
+      text: function() {
+        var subject_data = getSubjectData();
+        return "<p>Sie haben in "+subject_data.accuracy+"% der Fälle "+
+        "korrekt reagiert. </p><p>Ihre durchschnittliche Reaktionszeit war <strong>" +
+        subject_data.rt + " Millisekunden (ms)</strong>.</p>"+
+        "<p>Bitte notieren Sie Ihre ID <br><b>"+id+"</b><br> mit dem Zettel und Stift auf dem Schreibtisch vor Ihnen. "+
+        "<br>Die_der Versuchsleiter_in wird Sie zum Ausfüllen eines Fragebogens in einen anderen Raum bitten.<br>"+      
+        "Drücken Sie eine beliebige Taste, um das Experiment zu beenden. Vielen Dank!</p>";
+      }
+    }
+    
+    var cond_robot_side_en = {
+        type: 'button-response',
+        stimulus: '',
+        choices: ['Right', 'Left'],
+        prompt: "<p class='center-content'>Is the robot sitting to your right or left?</p>",
+        on_finish: function(data){
+            if(data.button_pressed == 0) {
+                jsPsych.plugins['naoqi-interface'].prepareRobot("L");
+            } else {
+                jsPsych.plugins['naoqi-interface'].prepareRobot("R");     
+            }
+        },
+    };
+    
+    var cond_robot_side_de = {
+        type: 'button-response',
+        stimulus: '',
+        choices: ['Rechts', 'Links'],
+        prompt: "<p class='center-content'>Sitzt der Roboter rechts oder links von Ihnen?</p>",
+        on_finish: function(data){
+            if(data.button_pressed == 0) {
+                console.log("rechts")
+                jsPsych.plugins['naoqi-interface'].prepareRobot("L");
+            } else {
+                console.log("links")     
+                jsPsych.plugins['naoqi-interface'].prepareRobot("R");     
+            }
+        },
+    };
+
+    var timeline = [];
+    timeline.push(configuration_ip_de);
+    timeline.push(cond_robot_side_de);
+    timeline.push(welcome_block_de);
+    timeline.push(instructions_block_de);
+    for (i = 0; i < num_blocks; i++) {
+       timeline.push(stim_blocks[i]);
+       timeline.push(timer_trial);
+    }
+    timeline.push(debrief_block_de);
+
+    function saveData(filename, filedata){
+       $.ajax({
+          type:'post',
+          cache: false,
+          url: 'http://'+citk_parameters.service_url+'/jspsych-data/save_data.php',
+          data: {filename: filename, filedata: filedata}
+       });
+    }
+    
+    function saveDataMysql(data){
+       var data_table = "bielefeld_junjul17"; // change this for different experiments
+       $.ajax({
+          type:'post',
+          cache: false,
+          url: 'http://'+citk_parameters.service_url+'/jspsych-data/save_data_mysql.php', // change this to point to your php file.
+          // opt_data is to add additional values to every row, like a subject ID
+          // replace 'key' with the column name, and 'value' with the value.
+          data: {
+              table: data_table,
+              json: data,
+              opt_data: JSON.stringify({'participant_id': id})
+          },
+          success: function(output) { console.log(output); } // write the result to javascript console
+       });
+    }
+
+    jsPsych.init({
+        timeline: timeline,
+        on_finish: function() {
+            jsPsych.plugins['naoqi-interface'].goToSavePos()
+            //jsPsych.data.displayData();
+            var filename = id+".csv"
+            console.log(filename)
+//            console.log(jsPsych.data.getAllData().json())
+            saveData(filename, jsPsych.data.getAllData().csv());    
+            saveDataMysql(jsPsych.data.getAllData().json())
+        },
+        on_trial_start: function() {
+            var lasttrialdata = jsPsych.data.getLastTrialData();
+        }
+    })
+
+    </script>
+</html>
+

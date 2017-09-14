@@ -1,0 +1,73 @@
+<poses>
+    <LArm>
+        <prepose>
+            <positions type="array">
+                <value>1.6137</value>
+                <value>-0.0721</value>
+                <value>-1.7472</value>
+                <value>-1.0844</value>
+                <value>1.6106</value>
+                <value>0.9612</value>
+            </positions>
+        </prepose>
+        <savepose>
+            <positions type="array">
+                <value>1.343</value>
+                <value>-0.200</value>
+                <value>-1.213</value>
+                <value>-1.061</value>
+                <value>-0.151</value>
+                <value>0.307</value>
+            </positions>
+        </savepose>
+    </LArm>
+    <RArm>
+        <prepose>
+            <positions type="array">
+                <value>1.6429</value>
+                <value>-0.1150</value>
+                <value>1.5262</value>
+                <value>1.0523</value>
+                <value>-1.3100</value>
+                <value>0.9304</value>
+            </positions>
+        </prepose>
+        <savepose>
+            <positions type="array">
+                <value>1.344</value>
+                <value>0.126</value>
+                <value>1.058</value>
+                <value>1.049</value>
+                <value>0.345</value>
+                <value>0.930</value>
+            </positions>
+        </savepose>
+    </RArm>
+    <LElbowRoll>
+        <keypress>
+            <positions type="array">
+                <value>-0.85</value>
+            </positions>
+        </keypress>
+        <keyrelease>
+            <positions type="array">
+                <value>-1.00</value>
+            </positions>
+        </keyrelease>
+    </LElbowRoll>
+    <RElbowRoll>
+        <keypress>
+            <positions type="array">
+                <value>0.85</value>
+            </positions>
+        </keypress>
+        <keyrelease>
+            <positions type="array">
+                <value>1.00</value>
+            </positions>
+        </keyrelease>
+    </RElbowRoll>
+    
+</poses>
+
+
